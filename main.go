@@ -6,9 +6,47 @@ import (
 	"github.com/belogik/goes"
 	"log"
 	"net/http"
+	"net/url"
 	"runtime"
 	"strings"
 )
+
+type Item struct {
+	Title string  `json:"title"`
+	Price float64 `json:"price"`
+}
+
+type Results struct {
+	Embedded map[string]interface{} `json:"_embedded"`
+}
+
+func buildResults(data *goes.Response) *Results {
+	var items []*Item
+
+	dataItems := data.Hits.Hits
+	for _, it := range dataItems {
+		source := it.Source
+		title := source["title"].(string)
+		price := source["price"].(float64)
+
+		item := &Item{
+			Title: title,
+			Price: price,
+		}
+
+		items = append(items, item)
+	}
+
+	embedded := map[string]interface{}{
+		"items": items,
+	}
+
+	results := &Results{
+		Embedded: embedded,
+	}
+
+	return results
+}
 
 func main() {
 
@@ -52,14 +90,17 @@ func main() {
 			},
 		}
 
-		searchResults, err := engine.Search(query, []string{"products"}, []string{"product"})
+		extraArgs := make(url.Values, 1)
+		searchResults, err := engine.Search(query, []string{"products"}, []string{"product"}, extraArgs)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		json_data, err := json.Marshal(searchResults)
+		responseData := buildResults(searchResults)
+
+		json_data, err := json.Marshal(responseData)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

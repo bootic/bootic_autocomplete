@@ -35,6 +35,7 @@ type Context struct {
 	Page    uint64
 	PerPage uint64
 	Q       string
+	CdnHost string
 	Req     *http.Request
 }
 
@@ -60,7 +61,7 @@ func buildResults(data *goes.Response, ctx *Context) *Results {
 			itemImage = img.(map[string]interface{})
 		}
 
-		itemLinks["btc:thumbnail"] = &Link{Href: itemThumbnail(shopId, itemImage)}
+		itemLinks["btc:thumbnail"] = &Link{Href: itemThumbnail(shopId, ctx.CdnHost, itemImage)}
 
 		item := &Item{
 			Links: itemLinks,
@@ -133,12 +134,12 @@ func paginationLink(req *http.Request, q string, page, perPage uint64) *Link {
 	return &Link{Href: u.String()}
 }
 
-func itemThumbnail(shopId float64, image map[string]interface{}) string {
+func itemThumbnail(shopId float64, cdnHost string, image map[string]interface{}) string {
 	// https://o.btcdn.co/224/small/25368-stallion2.gif
 	fileName := image["file_name"].(string)
 	id := image["id"].(string)
 
-	return fmt.Sprintf("https://o.btcdn.co/%.0f/small/%s-%s", shopId, id, fileName)
+	return fmt.Sprintf("https://%s/%.0f/small/%s-%s", cdnHost, shopId, id, fileName)
 }
 
 func pageValue(rawValue string, defValue uint64) (val uint64) {
@@ -162,10 +163,12 @@ func main() {
 	runtime.GOMAXPROCS(maxProcs)
 
 	var (
-		es_host string
+		es_host  string
+		cdn_host string
 	)
 
 	flag.StringVar(&es_host, "eshost", "localhost:9200", "HTTP host:port for ElasticSearch server")
+	flag.StringVar(&cdn_host, "cdnhost", "https://o.btcdn.co", "CDN host for item images")
 	flag.Parse()
 
 	es_host_and_port := strings.Split(es_host, ":")
@@ -228,6 +231,7 @@ func main() {
 			Page:    page,
 			PerPage: perPage,
 			Req:     r,
+			CdnHost: cdn_host,
 		}
 
 		responseData := buildResults(searchResults, ctx)

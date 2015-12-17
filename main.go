@@ -74,6 +74,7 @@ func main() {
 
 	engine := goes.NewConnection(es_host_and_port[0], es_host_and_port[1])
 
+	http.HandleFunc("/search", HttpHandler(engine, buildQuery))
 	http.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
 
 		q := r.URL.Query().Get("q")

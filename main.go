@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	// "fmt"
+	"fmt"
 	"github.com/belogik/goes"
 	"log"
 	"net/http"
@@ -14,8 +14,9 @@ import (
 )
 
 type Item struct {
-	Title string  `json:"title"`
-	Price float64 `json:"price"`
+	Links map[string]*Link `json:"_links"`
+	Title string           `json:"title"`
+	Price float64          `json:"price"`
 }
 
 type Link struct {
@@ -44,9 +45,16 @@ func buildResults(data *goes.Response, ctx *Context) *Results {
 	for _, it := range dataItems {
 		source := it.Source
 		title := source["title"].(string)
+		slug := source["slug"].(string)
 		price := source["price"].(float64)
+		shop := source["shop"].(map[string]interface{})
+		url := shop["url"].(string)
+		itemLinks := map[string]*Link{
+			"btc:web": &Link{Href: fmt.Sprintf("http://%s/products/%s", url, slug)},
+		}
 
 		item := &Item{
+			Links: itemLinks,
 			Title: title,
 			Price: price,
 		}

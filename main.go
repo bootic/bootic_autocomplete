@@ -42,16 +42,25 @@ func buildResults(data *goes.Response, ctx *Context) *Results {
 	var items []*Item
 
 	dataItems := data.Hits.Hits
+	var itemImage map[string]interface{}
+
 	for _, it := range dataItems {
 		source := it.Source
 		title := source["title"].(string)
 		slug := source["slug"].(string)
 		price := source["price"].(float64)
 		shop := source["shop"].(map[string]interface{})
+		shopId := shop["id"].(float64)
 		url := shop["url"].(string)
 		itemLinks := map[string]*Link{
 			"btc:web": &Link{Href: fmt.Sprintf("http://%s/products/%s", url, slug)},
 		}
+
+		if img, ok := source["image"]; ok {
+			itemImage = img.(map[string]interface{})
+		}
+
+		itemLinks["btc:thumbnail"] = &Link{Href: itemThumbnail(shopId, itemImage)}
 
 		item := &Item{
 			Links: itemLinks,
@@ -122,6 +131,14 @@ func paginationLink(req *http.Request, q string, page, perPage uint64) *Link {
 	u.RawQuery = query.Encode()
 
 	return &Link{Href: u.String()}
+}
+
+func itemThumbnail(shopId float64, image map[string]interface{}) string {
+	// https://o.btcdn.co/224/small/25368-stallion2.gif
+	fileName := image["file_name"].(string)
+	id := image["id"].(string)
+
+	return fmt.Sprintf("https://o.btcdn.co/%.0f/small/%s-%s", shopId, id, fileName)
 }
 
 func pageValue(rawValue string, defValue uint64) (val uint64) {

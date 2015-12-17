@@ -77,26 +77,16 @@ func buildResults(data *goes.Response, ctx *Context) *Results {
 		nextPage = page + 1
 	}
 
-	var links map[string]interface{}
+	links := map[string]interface{}{}
+
+	links["self"] = paginationLink(ctx.Req, q, page, perPage)
 
 	if nextPage > 0 {
-		u := &url.URL{
-			Scheme: "http",
-			Host:   ctx.Req.Host,
-			Path:   "search",
-		}
+		links["next"] = paginationLink(ctx.Req, q, nextPage, perPage)
+	}
 
-		query := u.Query()
-		query.Set("page", strconv.FormatUint(nextPage, 10))
-		query.Set("per_page", strconv.FormatUint(perPage, 10))
-		query.Set("q", q)
-		u.RawQuery = query.Encode()
-
-		links = map[string]interface{}{
-			"next": &Link{Href: u.String()},
-		}
-	} else {
-		links = map[string]interface{}{}
+	if page > 1 {
+		links["prev"] = paginationLink(ctx.Req, q, page-1, perPage)
 	}
 
 	results := &Results{
@@ -108,6 +98,22 @@ func buildResults(data *goes.Response, ctx *Context) *Results {
 	}
 
 	return results
+}
+
+func paginationLink(req *http.Request, q string, page, perPage uint64) *Link {
+	u := &url.URL{
+		Scheme: "http",
+		Host:   req.Host,
+		Path:   "search",
+	}
+
+	query := u.Query()
+	query.Set("page", strconv.FormatUint(page, 10))
+	query.Set("per_page", strconv.FormatUint(perPage, 10))
+	query.Set("q", q)
+	u.RawQuery = query.Encode()
+
+	return &Link{Href: u.String()}
 }
 
 func pageValue(rawValue string, defValue uint64) (val uint64) {

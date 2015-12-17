@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	// "fmt"
 	"github.com/belogik/goes"
 	"log"
 	"net/http"
@@ -17,14 +18,26 @@ type Item struct {
 	Price float64 `json:"price"`
 }
 
+type Link struct {
+	Href string `json:"href"`
+}
+
 type Results struct {
+	Links      map[string]interface{} `json:"_links"`
 	TotalItems uint64                 `json:"total_items"`
 	Page       uint64                 `json:"page"`
 	PerPage    uint64                 `json:"per_page"`
 	Embedded   map[string]interface{} `json:"_embedded"`
 }
 
-func buildResults(data *goes.Response, meta map[string]uint64) *Results {
+type Context struct {
+	Page    uint64
+	PerPage uint64
+	Q       string
+	Req     *http.Request
+}
+
+func buildResults(data *goes.Response, ctx *Context) *Results {
 	var items []*Item
 
 	dataItems := data.Hits.Hits
@@ -49,14 +62,48 @@ func buildResults(data *goes.Response, meta map[string]uint64) *Results {
 		embeddedItems = items
 	}
 
+	page := ctx.Page
+	perPage := ctx.PerPage
+	q := ctx.Q
+
 	embedded := map[string]interface{}{
 		"items": embeddedItems,
 	}
 
+	var nextPage uint64
+
+	tot := (page-1)*perPage + uint64(len(items))
+	if tot < data.Hits.Total {
+		nextPage = page + 1
+	}
+
+	var links map[string]interface{}
+
+	if nextPage > 0 {
+		u := &url.URL{
+			Scheme: "http",
+			Host:   ctx.Req.Host,
+			Path:   "search",
+		}
+
+		query := u.Query()
+		query.Set("page", strconv.FormatUint(nextPage, 10))
+		query.Set("per_page", strconv.FormatUint(perPage, 10))
+		query.Set("q", q)
+		u.RawQuery = query.Encode()
+
+		links = map[string]interface{}{
+			"next": &Link{Href: u.String()},
+		}
+	} else {
+		links = map[string]interface{}{}
+	}
+
 	results := &Results{
+		Links:      links,
 		TotalItems: data.Hits.Total,
-		Page:       meta["page"],
-		PerPage:    meta["per_page"],
+		Page:       page,
+		PerPage:    perPage,
 		Embedded:   embedded,
 	}
 
@@ -140,7 +187,14 @@ func main() {
 			return
 		}
 
-		responseData := buildResults(searchResults, map[string]uint64{"page": page, "per_page": perPage})
+		ctx := &Context{
+			Q:       q,
+			Page:    page,
+			PerPage: perPage,
+			Req:     r,
+		}
+
+		responseData := buildResults(searchResults, ctx)
 
 		json_data, err := json.Marshal(responseData)
 

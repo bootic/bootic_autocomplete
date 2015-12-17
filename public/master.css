@@ -1,0 +1,27 @@
+.list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+.item a {
+  display: block;
+  min-height: 44px;
+  padding: 2px;
+}
+.item img {
+  float: left;
+  width: 40px;
+  height: 40px;
+  border: solid gray 1px;
+  padding: 2px;
+}
+.item .detail {
+  float: left;
+  padding: 2px;
+}
+.item .title {
+  display: block;
+}
+.item .price {
+  display: block;
+}

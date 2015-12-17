@@ -116,6 +116,8 @@ func main() {
 		w.Write(json_data)
 	})
 
+	http.Handle("/", http.FileServer(http.Dir("./public")))
+
 	log.Println(fmt.Sprintf("serving http requests on %s", http_host))
 	log.Fatal(http.ListenAndServe(http_host, nil))
 }

@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Demo</title>
+    <link rel="stylesheet" href="/master.css">
+  </head>
+  <body>
+    <h1>Demo</h1>
+    <form action="/search" data-widget="autocomplete">
+      <input type="search" name="q" value="" autocomplete="off" placeholder="search" />
+    </form>
+
+    <div class="results" id="results">
+
+    </div>
+
+    <script type="text/tim" id="template">
+      <div class="wrap">
+        <h2>{{ total_items }} results</h2>
+        <ul class="list">
+          {{_embedded.items}}
+          <li class="item">
+            <a href="{{ _links.web.href }}">
+              <img src="{{ _links.thumbnail.href }}" />
+              <span class="detail">
+                <span class="title">{{ title }}</span>
+                <span class="price">{{ price }}</span>
+              </span>
+            </a>
+           </li>
+          {{/_embedded.items}}
+        </ul>
+      </div>
+    </script>
+
+    <script src="/tim.js"></script>
+    <script src="/app.js"></script>
+    <script>
+      Autocomplete.start({
+        form: document.querySelector('form[data-widget=autocomplete]'),
+        target: document.querySelector('#results'),
+        template: '#template'
+      })
+    </script>
+
+  </body>
+</html>

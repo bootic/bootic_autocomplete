@@ -3,6 +3,7 @@ package lib
 import (
 	"fmt"
 	"github.com/belogik/goes"
+	"github.com/leekchan/accounting"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -18,10 +19,14 @@ func BuildResults(data *goes.Response, ctx *Context) *Results {
 		source := it.Source
 		title := source["title"].(string)
 		slug := source["slug"].(string)
-		price := source["price"].(float64)
+		currency := source["currency_code"].(string)
+		price := uint64(source["price"].(float64))
 		shop := source["shop"].(map[string]interface{})
 		shopId := shop["id"].(float64)
 		url := shop["url"].(string)
+
+		formattedPrice := formatAmount(price, currency)
+
 		itemLinks := map[string]*Link{
 			"web": &Link{Href: fmt.Sprintf("http://%s/products/%s", url, slug)},
 		}
@@ -33,9 +38,10 @@ func BuildResults(data *goes.Response, ctx *Context) *Results {
 		itemLinks["thumbnail"] = &Link{Href: itemThumbnail(shopId, ctx.CdnHost, itemImage)}
 
 		item := &Item{
-			Links: itemLinks,
-			Title: title,
-			Price: price,
+			Links:          itemLinks,
+			Title:          title,
+			Price:          price,
+			FormattedPrice: formattedPrice,
 		}
 
 		items = append(items, item)
@@ -85,6 +91,18 @@ func BuildResults(data *goes.Response, ctx *Context) *Results {
 	}
 
 	return results
+}
+
+var currencies = map[string]accounting.Accounting{
+	"CLP": accounting.Accounting{Symbol: "$", Precision: 0, Thousand: ".", Decimal: ","},
+}
+
+func formatAmount(amount uint64, currency string) string {
+	if ac, ok := currencies[currency]; ok {
+		return ac.FormatMoney(amount)
+	} else {
+		return strconv.FormatUint(amount, 10)
+	}
 }
 
 func paginationLink(req *http.Request, q string, page, perPage uint64) *Link {

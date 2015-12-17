@@ -5,9 +5,10 @@ import (
 )
 
 type Item struct {
-	Links map[string]*Link `json:"_links"`
-	Title string           `json:"title"`
-	Price float64          `json:"price"`
+	Links          map[string]*Link `json:"_links"`
+	Title          string           `json:"title"`
+	Price          uint64           `json:"price"`
+	FormattedPrice string           `json:"formatted_price"`
 }
 
 type Link struct {

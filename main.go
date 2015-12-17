@@ -39,6 +39,15 @@ func main() {
 							"default_operator": "AND",
 						},
 					},
+					"filter": map[string]interface{}{
+						"and": []interface{}{
+							map[string]interface{}{
+								"term": map[string]interface{}{
+									"status": []string{"visible"},
+								},
+							},
+						},
+					},
 				},
 			},
 		}

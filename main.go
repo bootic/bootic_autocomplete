@@ -57,10 +57,14 @@ func main() {
 	var (
 		es_host  string
 		cdn_host string
+		es_index string
+		es_type  string
 	)
 
 	flag.StringVar(&es_host, "eshost", "localhost:9200", "HTTP host:port for ElasticSearch server")
 	flag.StringVar(&cdn_host, "cdnhost", "https://o.btcdn.co", "CDN host for item images")
+	flag.StringVar(&es_index, "esindex", "products", "ElasticSearch index")
+	flag.StringVar(&es_type, "estype", "product", "ElasticSearch document type")
 	flag.Parse()
 
 	es_host_and_port := strings.Split(es_host, ":")
@@ -89,7 +93,7 @@ func main() {
 		query := buildQuery(ctx)
 
 		extraArgs := make(url.Values, 1)
-		searchResults, err := engine.Search(query, []string{"products"}, []string{"product"}, extraArgs)
+		searchResults, err := engine.Search(query, []string{es_index}, []string{es_type}, extraArgs)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -12,6 +12,43 @@ import (
 	"strings"
 )
 
+func buildQuery(ctx *lib.Context) (query map[string]interface{}) {
+
+	size := ctx.PerPage
+	from := ctx.PerPage * (ctx.Page - 1)
+
+	query = map[string]interface{}{
+		"query": map[string]interface{}{
+			"filtered": map[string]interface{}{
+				"query": map[string]interface{}{
+					"query_string": map[string]interface{}{
+						"query":            ctx.Q,
+						"default_operator": "AND",
+					},
+				},
+				"filter": map[string]interface{}{
+					"and": []interface{}{
+						map[string]interface{}{
+							"term": map[string]interface{}{
+								"status": []string{"visible"},
+							},
+						},
+						map[string]interface{}{
+							"terms": map[string]interface{}{
+								"account.status": []string{"active", "free", "trial"},
+							},
+						},
+					},
+				},
+			},
+		},
+		"size": size,
+		"from": from,
+	}
+
+	return query
+}
+
 func main() {
 
 	maxProcs := runtime.NumCPU()
@@ -41,9 +78,6 @@ func main() {
 			perPage = 50
 		}
 
-		size := perPage
-		from := perPage * (page - 1)
-
 		ctx := &lib.Context{
 			Q:       q,
 			Page:    page,
@@ -52,34 +86,7 @@ func main() {
 			CdnHost: cdn_host,
 		}
 
-		query := map[string]interface{}{
-			"query": map[string]interface{}{
-				"filtered": map[string]interface{}{
-					"query": map[string]interface{}{
-						"query_string": map[string]interface{}{
-							"query":            ctx.Q,
-							"default_operator": "AND",
-						},
-					},
-					"filter": map[string]interface{}{
-						"and": []interface{}{
-							map[string]interface{}{
-								"term": map[string]interface{}{
-									"status": []string{"visible"},
-								},
-							},
-							map[string]interface{}{
-								"terms": map[string]interface{}{
-									"account.status": []string{"active", "free", "trial"},
-								},
-							},
-						},
-					},
-				},
-			},
-			"size": size,
-			"from": from,
-		}
+		query := buildQuery(ctx)
 
 		extraArgs := make(url.Values, 1)
 		searchResults, err := engine.Search(query, []string{"products"}, []string{"product"}, extraArgs)

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -17,10 +18,13 @@ type Item struct {
 }
 
 type Results struct {
-	Embedded map[string]interface{} `json:"_embedded"`
+	TotalItems uint64                 `json:"total_items"`
+	Page       uint64                 `json:"page"`
+	PerPage    uint64                 `json:"per_page"`
+	Embedded   map[string]interface{} `json:"_embedded"`
 }
 
-func buildResults(data *goes.Response) *Results {
+func buildResults(data *goes.Response, meta map[string]uint64) *Results {
 	var items []*Item
 
 	dataItems := data.Hits.Hits
@@ -42,10 +46,28 @@ func buildResults(data *goes.Response) *Results {
 	}
 
 	results := &Results{
-		Embedded: embedded,
+		TotalItems: data.Hits.Total,
+		Page:       meta["page"],
+		PerPage:    meta["per_page"],
+		Embedded:   embedded,
 	}
 
 	return results
+}
+
+func pageValue(rawValue string, defValue uint64) (val uint64) {
+	if rawValue != "" {
+		pval, err := strconv.ParseUint(rawValue, 10, 64)
+		if err == nil {
+			val = pval
+		} else {
+			val = defValue
+		}
+	} else {
+		val = defValue
+	}
+
+	return val
 }
 
 func main() {
@@ -67,7 +89,13 @@ func main() {
 	http.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
 
 		q := r.URL.Query().Get("q")
-		// fmt.Fprintf(w, "Search: %q", q)
+
+		page := pageValue(r.URL.Query().Get("page"), 1)
+		perPage := pageValue(r.URL.Query().Get("per_page"), 30)
+
+		size := perPage
+		from := perPage * (page - 1)
+
 		query := map[string]interface{}{
 			"query": map[string]interface{}{
 				"filtered": map[string]interface{}{
@@ -88,6 +116,8 @@ func main() {
 					},
 				},
 			},
+			"size": size,
+			"from": from,
 		}
 
 		extraArgs := make(url.Values, 1)
@@ -98,7 +128,7 @@ func main() {
 			return
 		}
 
-		responseData := buildResults(searchResults)
+		responseData := buildResults(searchResults, map[string]uint64{"page": page, "per_page": perPage})
 
 		json_data, err := json.Marshal(responseData)
 

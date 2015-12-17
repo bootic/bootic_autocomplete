@@ -185,6 +185,11 @@ func main() {
 									"status": []string{"visible"},
 								},
 							},
+							map[string]interface{}{
+								"terms": map[string]interface{}{
+									"account.status": []string{"active", "free", "trial"},
+								},
+							},
 						},
 					},
 				},

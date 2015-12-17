@@ -41,8 +41,16 @@ func buildResults(data *goes.Response, meta map[string]uint64) *Results {
 		items = append(items, item)
 	}
 
+	var embeddedItems interface{}
+
+	if len(items) == 0 {
+		embeddedItems = []string{}
+	} else {
+		embeddedItems = items
+	}
+
 	embedded := map[string]interface{}{
-		"items": items,
+		"items": embeddedItems,
 	}
 
 	results := &Results{
@@ -92,6 +100,10 @@ func main() {
 
 		page := pageValue(r.URL.Query().Get("page"), 1)
 		perPage := pageValue(r.URL.Query().Get("per_page"), 30)
+
+		if perPage > 50 {
+			perPage = 50
+		}
 
 		size := perPage
 		from := perPage * (page - 1)

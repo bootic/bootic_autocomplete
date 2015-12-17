@@ -23,14 +23,14 @@ func BuildResults(data *goes.Response, ctx *Context) *Results {
 		shopId := shop["id"].(float64)
 		url := shop["url"].(string)
 		itemLinks := map[string]*Link{
-			"btc:web": &Link{Href: fmt.Sprintf("http://%s/products/%s", url, slug)},
+			"web": &Link{Href: fmt.Sprintf("http://%s/products/%s", url, slug)},
 		}
 
 		if img, ok := source["image"]; ok {
 			itemImage = img.(map[string]interface{})
 		}
 
-		itemLinks["btc:thumbnail"] = &Link{Href: itemThumbnail(shopId, ctx.CdnHost, itemImage)}
+		itemLinks["thumbnail"] = &Link{Href: itemThumbnail(shopId, ctx.CdnHost, itemImage)}
 
 		item := &Item{
 			Links: itemLinks,

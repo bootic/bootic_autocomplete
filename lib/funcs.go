@@ -91,7 +91,7 @@ func paginationLink(req *http.Request, q string, page, perPage uint64) *Link {
 	u := &url.URL{
 		Scheme: "http",
 		Host:   req.Host,
-		Path:   "search",
+		Path:   req.URL.Path,
 	}
 
 	query := u.Query()

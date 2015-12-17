@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"github.com/belogik/goes"
 	"github.com/bootic/bootic_autocomplete/lib"
 	"log"
@@ -55,12 +56,14 @@ func main() {
 	runtime.GOMAXPROCS(maxProcs)
 
 	var (
-		es_host  string
-		cdn_host string
-		es_index string
-		es_type  string
+		http_host string
+		es_host   string
+		cdn_host  string
+		es_index  string
+		es_type   string
 	)
 
+	flag.StringVar(&http_host, "httphost", "localhost:3000", "HTTP host:port for search endpoint")
 	flag.StringVar(&es_host, "eshost", "localhost:9200", "HTTP host:port for ElasticSearch server")
 	flag.StringVar(&cdn_host, "cdnhost", "https://o.btcdn.co", "CDN host for item images")
 	flag.StringVar(&es_index, "esindex", "products", "ElasticSearch index")
@@ -113,5 +116,6 @@ func main() {
 		w.Write(json_data)
 	})
 
-	log.Fatal(http.ListenAndServe(":3000", nil))
+	log.Println(fmt.Sprintf("serving http requests on %s", http_host))
+	log.Fatal(http.ListenAndServe(http_host, nil))
 }

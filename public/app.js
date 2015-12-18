@@ -134,6 +134,10 @@ var Autocomplete = (function (global, undefined, document) {
     }
   }
 
+  function empty (t) {
+    t.innerHTML = ''
+  }
+
   function start (opts) {
     var form = opts.form,
         target = opts.target,
@@ -155,6 +159,8 @@ var Autocomplete = (function (global, undefined, document) {
       var data = formData(form);
       if(shouldSearch(data)) {
         search.run(data);
+      } else {
+        empty(target)
       }
       return false
     }

@@ -6,18 +6,19 @@
     <link rel="stylesheet" href="/master.css">
   </head>
   <body>
-    <h1>Demo</h1>
-    <form action="/search" data-widget="autocomplete">
-      <input tabindex="1" type="search" name="q" value="" autocomplete="off" placeholder="search" />
-    </form>
+    <div class="wrapper">
+      <form action="/search" data-widget="autocomplete">
+        <input tabindex="1" type="search" name="q" value="" autocomplete="off" placeholder="search" />
+      </form>
 
-    <div class="results" id="results">
+      <div class="results" id="results">
 
+      </div>
     </div>
 
     <script type="text/tim" id="template">
       <div class="wrap">
-        <h2>{{ total_items }} results</h2>
+        <h2 class="meta">{{ total_items }} results</h2>
         <ul class="list">
           {{_embedded.items}}
           <li class="item">

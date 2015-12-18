@@ -1,32 +1,77 @@
-.results {
+p, table, h1, h2, h3, h4, h5, h6, ul, ol, body {
+  padding: 0;
+  margin: 0;
+}
 
+body {
+  font-family: helvetica, sans-serif;
+  font-size: 14px;
+}
+
+form {
+  margin-bottom: 2em;
+  position: fixed;
+  top: 0;left: 0;right: 0;
+}
+
+form input[type=search] {
+  display: block;
+  width: 100%;
+  border: solid silver 1px;
+  border-width: 0 0 1px 0;
+  background: #eee;
+  font-size: 2em;
+  padding: 0.5em;
+}
+
+form input[type=search]:focus {
+  outline: none;
+}
+
+.results {
+  margin-top: 100px;
+  margin-bottom: 10px;
+}
+
+.results .meta {
+  font-size: 1em;
+  font-weight: normal;
+  padding: .25em;
 }
 
 .list {
-  max-height: 500px;
-  overflow-y: auto;
   list-style-type: none;
-  margin: 0;
-  padding: 0;
 }
 .item a {
   display: block;
-  min-height: 44px;
+  min-height: 64px;
   padding: 2px;
 }
+.item a:visited,
+.item a:active,
+.item a {
+  color: #333;
+}
+
+.item a:hover {
+  background: #eee;
+  color: black;
+}
+
 .item img {
   float: left;
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   border: solid gray 1px;
   padding: 2px;
 }
 .item .detail {
   float: left;
-  padding: 2px;
+  padding: 2px 2px 2px 5px;
 }
 .item .title {
   display: block;
+  margin-bottom: .5em;
 }
 .item .price {
   display: block;

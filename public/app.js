@@ -43,6 +43,7 @@ var Autocomplete = (function (global, undefined, document) {
     this._logger = opts.logger;
     this._url = url.replace(/^http(\w?):/, scheme).replace(/\/search$/, '/ws');
     this._fn = fn;
+    this._retries = 5;
     this.connected = false;
     this.connect()
   }
@@ -64,6 +65,12 @@ var Autocomplete = (function (global, undefined, document) {
     onClose: function (evt) {
       this.connected = false;
       this._logger.log('WebSocket closed');
+      if(this._retries == 0) {
+        this._logger.log('Websocket retried too many times. Giving up');
+        return
+      }
+
+      this._retries--;
       global.setTimeout(this.connect.bind(this), 5000);
     },
     onMessage: function (evt) {

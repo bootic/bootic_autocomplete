@@ -9,6 +9,7 @@ type Item struct {
 	Title          string           `json:"title"`
 	Price          uint64           `json:"price"`
 	FormattedPrice string           `json:"formatted_price"`
+	Tags           []interface{}    `json:"tags"`
 }
 
 type Link struct {

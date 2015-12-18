@@ -23,6 +23,7 @@ func BuildResults(data *goes.Response, ctx *Context) *Results {
 		price := uint64(source["price"].(float64))
 		shop := source["shop"].(map[string]interface{})
 		shopId := shop["id"].(float64)
+		tags := source["tags"].([]interface{})
 		url := shop["url"].(string)
 
 		formattedPrice := formatAmount(price, currency)
@@ -42,6 +43,7 @@ func BuildResults(data *goes.Response, ctx *Context) *Results {
 			Title:          title,
 			Price:          price,
 			FormattedPrice: formattedPrice,
+			Tags:           tags,
 		}
 
 		items = append(items, item)

@@ -26,6 +26,8 @@
               <span class="detail">
                 <span class="title">{{ title }}</span>
                 <span class="price">{{ formatted_price }}</span>
+                <span class="tags">
+                </span>
               </span>
             </a>
            </li>
@@ -37,8 +39,11 @@
     <script src="/tim.js"></script>
     <script src="/app.js"></script>
     <script>
+      var form = document.querySelector('form[data-widget=autocomplete]');
+
       Autocomplete.start({
-        form: document.querySelector('form[data-widget=autocomplete]'),
+        form: form,
+        secure: false,
         target: document.querySelector('#results'),
         template: '#template'
       })

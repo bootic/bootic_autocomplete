@@ -32,8 +32,10 @@ var Autocomplete = (function (global, undefined, document) {
     }
   }
 
-  var WsSearch = function (url, fn) {
-    this._url = url.replace(/^http(\w?):/, 'ws:').replace(/\/search$/, '/ws');
+  var WsSearch = function (url, fn, opts) {
+    this._opts = opts || {secure: false}
+    var scheme = this._opts.secure ? 'wss:' : 'ws:';
+    this._url = url.replace(/^http(\w?):/, scheme).replace(/\/search$/, '/ws');
     this._fn = fn;
     this.connected = false;
     this._ws = new WebSocket(this._url);
@@ -104,6 +106,7 @@ var Autocomplete = (function (global, undefined, document) {
   function start (opts) {
     var form = opts.form,
         target = opts.target,
+        secure = !!opts.secure,
         template = null;
 
     if(opts.template) {
@@ -113,7 +116,7 @@ var Autocomplete = (function (global, undefined, document) {
 
     var render = renderInto(target, template);
 
-    var search = new MultiSearch(form.action, render);
+    var search = new MultiSearch(form.action, render, {secure: secure});
 
     function submit (evt) {
       evt.preventDefault()

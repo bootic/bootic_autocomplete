@@ -30,7 +30,10 @@ var Autocomplete = (function (global, undefined, document) {
         query.push([k, encodeURI(params[k])].join('='))
       }
 
-      fetch(this._url + '?' + query.join('&')).catch(handleError).then(json).then(fn);
+      fetch(this._url + '?' + query.join('&'))
+        .catch(handleError)
+        .then(json)
+        .then(fn);
     }
   }
 

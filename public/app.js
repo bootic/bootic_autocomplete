@@ -38,6 +38,7 @@ var Autocomplete = (function (global, undefined, document) {
     this._opts = opts || {secure: false}
     var scheme = this._opts.secure ? 'wss:' : 'ws:';
     this._logger = opts.logger;
+    this._onClose = opts.onClose || (function () {})
     this._url = url.replace(/^http(\w?):/, scheme).replace(/\/search$/, '/ws');
     this._fn = fn;
     this.connected = false;
@@ -57,6 +58,7 @@ var Autocomplete = (function (global, undefined, document) {
     },
     onClose: function (evt) {
       this.connected = false;
+      this._onClose()
       this._logger.log('WebSocket closed');
     },
     onMessage: function (evt) {
@@ -66,8 +68,16 @@ var Autocomplete = (function (global, undefined, document) {
   }
 
   var MultiSearch = function (url, fn, opts) {
+    function onWsClose () {
+      var self = this;
+      global.setTimeout(function () {
+        self._wsSearch = new WsSearch(url, fn, opts)
+      }, 5000);
+    }
+
+    var wsOpts = Object.assign({}, opts, {onClose: onWsClose.bind(this)});
     this._ajaxSearch = new AjaxSearch(url, fn, opts);
-    this._wsSearch = supportsWebsockets() ? new WsSearch(url, fn, opts) : null
+    this._wsSearch = supportsWebsockets() ? new WsSearch(url, fn, wsOpts) : null
   }
 
   MultiSearch.prototype = {

@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/belogik/goes"
 	"net/http"
@@ -12,7 +11,7 @@ import (
 type JsonPresenter struct {
 }
 
-func (p *JsonPresenter) Present(data *goes.Response, ctx *Context) ([]byte, error) {
+func (p *JsonPresenter) Present(data *goes.Response, ctx *Context) *Results {
 	var items []*Item
 
 	dataItems := data.Hits.Hits
@@ -93,7 +92,7 @@ func (p *JsonPresenter) Present(data *goes.Response, ctx *Context) ([]byte, erro
 		Embedded:   embedded,
 	}
 
-	return json.Marshal(results)
+	return results
 }
 
 func paginationLink(req *http.Request, q string, page, perPage uint64) *Link {

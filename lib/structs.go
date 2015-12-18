@@ -14,7 +14,7 @@ type Searcher interface {
 }
 
 type Presenter interface {
-	Present(*goes.Response, *Context) ([]byte, error)
+	Present(*goes.Response, *Context) *Results
 }
 
 type Item struct {

@@ -100,6 +100,7 @@ func main() {
 	presenter := &lib.JsonPresenter{}
 
 	http.Handle("/search", lib.HttpHandler(searcher, &esQuery{}, presenter, config))
+	http.Handle("/ws", lib.WsHandler(searcher, &esQuery{}, presenter, config))
 
 	http.Handle("/", http.FileServer(http.Dir("./public")))
 

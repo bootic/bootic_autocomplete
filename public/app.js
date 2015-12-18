@@ -1,10 +1,6 @@
-var Autocomplete = (function (global, undefined) {
+var Autocomplete = (function (global, undefined, document) {
                    
   var DEFAULT_TEMPLATE = '<ul>{{_embedded.items}}<li class="item">{{title}} ${{price}}</li>{{/_embedded.items}}</ul>';
-
-  var Search = function (url) {
-    this._url = url;
-  }
 
   function json (r) {
     return r.json()
@@ -19,14 +15,47 @@ var Autocomplete = (function (global, undefined) {
     }
   }
 
-  Search.prototype = {
-    run: function (params, fn) {
+  var AjaxSearch = function (url, fn) {
+    this._url = url;
+    this._fn = fn;
+  }
+
+  AjaxSearch.prototype = {
+    run: function (params) {
+      var fn = this._fn;
       var query = [];
       for(var k in params) {
         query.push([k, encodeURI(params[k])].join('='))
       }
 
       fetch(this._url + '?' + query.join('&')).catch(handleError).then(json).then(fn);
+    }
+  }
+
+  var WsSearch = function (url, fn) {
+    this._url = url.replace(/^http(\w?):/, 'ws:').replace(/\/search$/, '/ws');
+    this._fn = fn;
+    this._connected = false;
+    this._ws = new WebSocket(this._url);
+    this._ws.onopen = this.onOpen.bind(this);
+    this._ws.onclose = this.onClose.bind(this);
+    this._ws.onmessage = this.onMessage.bind(this);
+  }
+
+  WsSearch.prototype = {
+    run: function (params) {
+      this._ws.send(JSON.stringify(params));
+    },
+    onOpen: function (evt) {
+      this._connected = true;
+      console.log('open', evt)
+    },
+    onClose: function (evt) {
+      console.log('close', evt)
+    },
+    onMessage: function (evt) {
+      var data = JSON.parse(evt.data);
+      this._fn(data);
     }
   }
 
@@ -54,7 +83,6 @@ var Autocomplete = (function (global, undefined) {
 
   function start (opts) {
     var form = opts.form,
-        search = new Search(form.action),
         target = opts.target,
         template = null;
 
@@ -65,10 +93,13 @@ var Autocomplete = (function (global, undefined) {
 
     var render = renderInto(target, template);
 
+    var searchConstructor = ('WebSocket' in global) ? WsSearch : AjaxSearch;
+    var search = new searchConstructor(form.action, render);
+
     function submit (evt) {
       evt.preventDefault()
       var data = formData(form);
-      search.run(data, render);
+      search.run(data);
       return false
     }
 
@@ -80,6 +111,6 @@ var Autocomplete = (function (global, undefined) {
     start: start
   }
 
-})(window, undefined);
+})(window, undefined, document);
 
 

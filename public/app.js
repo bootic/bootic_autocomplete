@@ -15,9 +15,11 @@ var Autocomplete = (function (global, undefined, document) {
     }
   }
 
-  var AjaxSearch = function (url, fn) {
+  var AjaxSearch = function (url, fn, opts) {
+    this._logger = opts.logger;
     this._url = url;
     this._fn = fn;
+    this._logger.log('ajax searcher ready');
   }
 
   AjaxSearch.prototype = {
@@ -35,6 +37,7 @@ var Autocomplete = (function (global, undefined, document) {
   var WsSearch = function (url, fn, opts) {
     this._opts = opts || {secure: false}
     var scheme = this._opts.secure ? 'wss:' : 'ws:';
+    this._logger = opts.logger;
     this._url = url.replace(/^http(\w?):/, scheme).replace(/\/search$/, '/ws');
     this._fn = fn;
     this.connected = false;
@@ -50,11 +53,11 @@ var Autocomplete = (function (global, undefined, document) {
     },
     onOpen: function (evt) {
       this.connected = true;
-      console.log('open', evt)
+    this._logger.log('WebSocket searcher ready');
     },
     onClose: function (evt) {
       this.connected = false;
-      console.log('close', evt)
+      this._logger.log('WebSocket closed');
     },
     onMessage: function (evt) {
       var data = JSON.parse(evt.data);
@@ -62,9 +65,9 @@ var Autocomplete = (function (global, undefined, document) {
     }
   }
 
-  var MultiSearch = function (url, fn) {
-    this._ajaxSearch = new AjaxSearch(url, fn);
-    this._wsSearch = supportsWebsockets() ? new WsSearch(url, fn) : null
+  var MultiSearch = function (url, fn, opts) {
+    this._ajaxSearch = new AjaxSearch(url, fn, opts);
+    this._wsSearch = supportsWebsockets() ? new WsSearch(url, fn, opts) : null
   }
 
   MultiSearch.prototype = {
@@ -103,10 +106,25 @@ var Autocomplete = (function (global, undefined, document) {
     }
   }
 
+  function shouldSearch (params) {
+    return params.q != '*'
+  }
+
+  var Logger = function () {
+
+  }
+
+  Logger.prototype = {
+    log: function (msg) {
+      console.log('[' + (new Date()).toString() + '] ' + msg)
+    }
+  }
+
   function start (opts) {
     var form = opts.form,
         target = opts.target,
         secure = !!opts.secure,
+        logger = opts.logger || new Logger(),
         template = null;
 
     if(opts.template) {
@@ -116,12 +134,14 @@ var Autocomplete = (function (global, undefined, document) {
 
     var render = renderInto(target, template);
 
-    var search = new MultiSearch(form.action, render, {secure: secure});
+    var search = new MultiSearch(form.action, render, {logger: logger,secure: secure});
 
     function submit (evt) {
       evt.preventDefault()
       var data = formData(form);
-      search.run(data);
+      if(shouldSearch(data)) {
+        search.run(data);
+      }
       return false
     }
 

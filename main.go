@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/belogik/goes"
@@ -13,7 +12,10 @@ import (
 	"strings"
 )
 
-func buildQuery(ctx *lib.Context) (query map[string]interface{}) {
+type esQuery struct {
+}
+
+func (q *esQuery) Build(ctx *lib.Context) (query map[string]interface{}) {
 
 	size := ctx.PerPage
 	from := ctx.PerPage * (ctx.Page - 1)
@@ -50,6 +52,17 @@ func buildQuery(ctx *lib.Context) (query map[string]interface{}) {
 	return query
 }
 
+type esSearcher struct {
+	conn    *goes.Connection
+	esIndex []string
+	esType  []string
+}
+
+func (s *esSearcher) Search(query map[string]interface{}) (*goes.Response, error) {
+	extraArgs := make(url.Values, 1)
+	return s.conn.Search(query, s.esIndex, s.esType, extraArgs)
+}
+
 func main() {
 
 	maxProcs := runtime.NumCPU()
@@ -72,50 +85,21 @@ func main() {
 
 	es_host_and_port := strings.Split(es_host, ":")
 
-	engine := goes.NewConnection(es_host_and_port[0], es_host_and_port[1])
+	config := map[string]string{
+		"cdn_host": cdn_host,
+	}
 
-	http.HandleFunc("/search", HttpHandler(engine, buildQuery))
-	http.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
+	conn := goes.NewConnection(es_host_and_port[0], es_host_and_port[1])
 
-		q := r.URL.Query().Get("q")
+	searcher := &esSearcher{
+		conn:    conn,
+		esIndex: []string{es_index},
+		esType:  []string{es_type},
+	}
 
-		page := lib.PageValue(r.URL.Query().Get("page"), 1)
-		perPage := lib.PageValue(r.URL.Query().Get("per_page"), 30)
+	presenter := &lib.JsonPresenter{}
 
-		if perPage > 50 {
-			perPage = 50
-		}
-
-		ctx := &lib.Context{
-			Q:       q,
-			Page:    page,
-			PerPage: perPage,
-			Req:     r,
-			CdnHost: cdn_host,
-		}
-
-		query := buildQuery(ctx)
-
-		extraArgs := make(url.Values, 1)
-		searchResults, err := engine.Search(query, []string{es_index}, []string{es_type}, extraArgs)
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		responseData := lib.BuildResults(searchResults, ctx)
-
-		json_data, err := json.Marshal(responseData)
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(json_data)
-	})
+	http.HandleFunc("/search", lib.HttpHandler(searcher, &esQuery{}, presenter, config))
 
 	http.Handle("/", http.FileServer(http.Dir("./public")))
 

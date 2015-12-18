@@ -1,8 +1,21 @@
 package lib
 
 import (
+	"github.com/belogik/goes"
 	"net/http"
 )
+
+type QueryBuilder interface {
+	Build(*Context) map[string]interface{}
+}
+
+type Searcher interface {
+	Search(map[string]interface{}) (*goes.Response, error)
+}
+
+type Presenter interface {
+	Present(*goes.Response, *Context) ([]byte, error)
+}
 
 type Item struct {
 	Links          map[string]*Link `json:"_links"`

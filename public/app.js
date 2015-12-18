@@ -35,7 +35,7 @@ var Autocomplete = (function (global, undefined, document) {
   var WsSearch = function (url, fn) {
     this._url = url.replace(/^http(\w?):/, 'ws:').replace(/\/search$/, '/ws');
     this._fn = fn;
-    this._connected = false;
+    this.connected = false;
     this._ws = new WebSocket(this._url);
     this._ws.onopen = this.onOpen.bind(this);
     this._ws.onclose = this.onClose.bind(this);
@@ -47,16 +47,36 @@ var Autocomplete = (function (global, undefined, document) {
       this._ws.send(JSON.stringify(params));
     },
     onOpen: function (evt) {
-      this._connected = true;
+      this.connected = true;
       console.log('open', evt)
     },
     onClose: function (evt) {
+      this.connected = false;
       console.log('close', evt)
     },
     onMessage: function (evt) {
       var data = JSON.parse(evt.data);
       this._fn(data);
     }
+  }
+
+  var MultiSearch = function (url, fn) {
+    this._ajaxSearch = new AjaxSearch(url, fn);
+    this._wsSearch = supportsWebsockets() ? new WsSearch(url, fn) : null
+  }
+
+  MultiSearch.prototype = {
+    run: function (params) {
+      if(this._wsSearch && this._wsSearch.connected) {
+        this._wsSearch.run(params)
+      } else {
+        this._ajaxSearch.run(params)
+      }
+    }
+  }
+
+  function supportsWebsockets () {
+    return ('WebSocket' in global);
   }
 
   function formData (form) {
@@ -93,8 +113,7 @@ var Autocomplete = (function (global, undefined, document) {
 
     var render = renderInto(target, template);
 
-    var searchConstructor = ('WebSocket' in global) ? WsSearch : AjaxSearch;
-    var search = new searchConstructor(form.action, render);
+    var search = new MultiSearch(form.action, render);
 
     function submit (evt) {
       evt.preventDefault()

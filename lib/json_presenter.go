@@ -112,7 +112,7 @@ func paginationLink(req *http.Request, q string, page, perPage uint64) *Link {
 }
 
 func itemThumbnail(shopId float64, cdnHost string, image map[string]interface{}) string {
-	// https://o.btcdn.co/224/small/25368-stallion2.gif
+	// https://o.btcdn.co/224/thumbnail/25368-stallion2.gif
 	var fileName string
 	if fn, ok := image["file_name"]; ok {
 		fileName = fn.(string)
@@ -121,5 +121,5 @@ func itemThumbnail(shopId float64, cdnHost string, image map[string]interface{})
 	}
 	id := image["id"].(string)
 
-	return fmt.Sprintf("%s/%.0f/small/%s-%s", cdnHost, shopId, id, fileName)
+	return fmt.Sprintf("%s/%.0f/thumbnail/%s-%s", cdnHost, shopId, id, fileName)
 }

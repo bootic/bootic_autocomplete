@@ -61,7 +61,6 @@ func WsHandler(searcher Searcher, queryBuilder QueryBuilder, presenter Presenter
 			results := presenter.Present(searchResults, ctx)
 
 			websocket.JSON.Send(ws, results)
-			log.Println("ws message", queryMsg.String())
 		}
 
 		ws.Close()

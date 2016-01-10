@@ -22,6 +22,7 @@ func PageValue(rawValue string, defValue uint64) (val uint64) {
 
 var currencies = map[string]accounting.Accounting{
 	"CLP": accounting.Accounting{Symbol: "$", Precision: 0, Thousand: ".", Decimal: ","},
+	"USD": accounting.Accounting{Symbol: "$", Precision: 2, Thousand: ",", Decimal: "."},
 }
 
 func formatAmount(amount uint64, currency string) string {
